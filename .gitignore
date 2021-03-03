@@ -44,3 +44,6 @@ hs_err_pid*
 
 ### MAC ###
 .DS_store
+
+.extract
+.flattened-pom.xml

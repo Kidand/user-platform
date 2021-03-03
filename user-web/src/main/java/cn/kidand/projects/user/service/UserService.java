@@ -2,6 +2,8 @@ package cn.kidand.projects.user.service;
 
 import cn.kidand.projects.user.domain.User;
 
+import java.util.List;
+
 /**
  * 用户服务
  */
@@ -34,4 +36,6 @@ public interface UserService {
     User queryUserById(Long id);
 
     User queryUserByNameAndPassword(String name, String password);
+
+    List<User> queryAll();
 }
