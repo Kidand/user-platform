@@ -13,27 +13,21 @@ import javax.ws.rs.Path;
 /**
  * 输出 “Hello,World” Controller
  */
-@Path("/hello")
+@Path("/user")
 public class HelloWorldController implements PageController {
     private UserService userService;
 
     @GET
     @POST
-    @Path("/world") // /hello/world -> HelloWorldController
+    @Path("/register") // /hello/world -> HelloWorldController
     public String execute(HttpServletRequest request, HttpServletResponse response) throws Throwable {
         return "index.jsp";
-    }
-
-    @GET
-    @Path("/view/register")
-    public String registerView(){
-        return  "user/register.jsp";
     }
 
 
 
     @POST
-    @Path("/register")
+    @Path("/register/user")
     public String register(User user , HttpServletRequest request){
         boolean register = userService.register(user);
         String view;
