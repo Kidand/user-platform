@@ -3,6 +3,7 @@ package cn.kidand.web.mvc;
 import cn.kidand.web.mvc.controller.Controller;
 import cn.kidand.web.mvc.controller.PageController;
 import cn.kidand.web.mvc.controller.RestController;
+import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.RequestDispatcher;
@@ -15,14 +16,37 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.substringAfter;
-
+/**
+*
+*  ██╗  ██╗██╗██████╗  █████╗ ███╗   ██╗██████╗
+*  ██║ ██╔╝██║██╔══██╗██╔══██╗████╗  ██║██╔══██╗
+*  █████╔╝ ██║██║  ██║███████║██╔██╗ ██║██║  ██║
+*  ██╔═██╗ ██║██║  ██║██╔══██║██║╚██╗██║██║  ██║
+*  ██║  ██╗██║██████╔╝██║  ██║██║ ╚████║██████╔╝
+*  ╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+*
+* @description:FrontControllerServlet
+* @author: Kidand
+* @date: 2021/3/9 7:33 下午
+* Copyright © 2019-Kidand.
+*/
 public class FrontControllerServlet extends HttpServlet {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
      * 请求路径和 Controller 的映射关系缓存
@@ -51,20 +75,31 @@ public class FrontControllerServlet extends HttpServlet {
         for (Controller controller : ServiceLoader.load(Controller.class)) {
             Class<?> controllerClass = controller.getClass();
             Path pathFromClass = controllerClass.getAnnotation(Path.class);
-            String requestPath = pathFromClass.value();
-            Method[] publicMethods = controllerClass.getMethods();
+            String requestPathByClass = pathFromClass.value();
+            List<Method> publicMethodsFromObject = asList(Object.class.getMethods());
+            // 获取当前controller的所有public方法
+            List<Method> publicMethods = asList(controllerClass.getMethods())
+                    .stream()
+                    // 排除Object的public方法
+                    .filter(m -> !publicMethodsFromObject.contains(m))
+                    .collect(Collectors.toList());
             // 处理方法支持的 HTTP 方法集合
             for (Method method : publicMethods) {
                 Set<String> supportedHttpMethods = findSupportedHttpMethods(method);
                 Path pathFromMethod = method.getAnnotation(Path.class);
+                String completeRequestPath = requestPathByClass;
                 if (pathFromMethod != null) {
-                    requestPath += pathFromMethod.value();
+                    completeRequestPath += pathFromMethod.value();
                 }
-                handleMethodInfoMapping.put(requestPath,
-                        new HandlerMethodInfo(requestPath, method, supportedHttpMethods));
+                handleMethodInfoMapping.put(completeRequestPath,
+                        new HandlerMethodInfo(completeRequestPath, method, supportedHttpMethods));
+                controllersMapping.put(completeRequestPath, controller);
             }
-            controllersMapping.put(requestPath, controller);
         }
+        logger.info("controllersMapping---------------------------------");
+        controllersMapping.forEach((k, v) -> logger.info(String.format("%s %s", k, v)));
+        logger.info("handleMethodInfoMapping----------------------------");
+        handleMethodInfoMapping.forEach((k, v) -> logger.info(String.format("%s %s", k, v.getHandlerMethod().getName())));
     }
 
     /**
@@ -119,18 +154,38 @@ public class FrontControllerServlet extends HttpServlet {
 
             try {
                 if (handlerMethodInfo != null) {
-
-                    String httpMethod = request.getMethod();
-
-                    if (!handlerMethodInfo.getSupportedHttpMethods().contains(httpMethod)) {
+                    boolean isNotAllowed = !handlerMethodInfo.getSupportedHttpMethods().contains(request.getMethod());
+                    if (isNotAllowed) {
                         // HTTP 方法不支持
                         response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                         return;
                     }
 
                     if (controller instanceof PageController) {
-                        PageController pageController = PageController.class.cast(controller);
-                        String viewPath = pageController.execute(request, response);
+                        // 调用controller对应的方法
+                        String viewPath = (String) handlerMethodInfo.getHandlerMethod().invoke(controller, request, response);
+                        // 页面请求 redirect
+                        if (viewPath.startsWith("redirect:")) {
+                            // 截取重定向地址
+                            String redirectPath = viewPath.substring("redirect:".length());
+                            // 重定向地址是相对路径
+                            if (!redirectPath.startsWith("/")) {
+                                Path pathAnnotationByClass = controller.getClass().getAnnotation(Path.class);
+                                String pathByClass = pathAnnotationByClass.value();
+                                if (pathByClass == null) {
+                                    redirectPath = "/" + redirectPath;
+                                } else {
+                                    redirectPath = pathByClass + "/" + redirectPath;
+                                }
+                            }
+                            // 拼接contextPath
+                            if (servletContextPath != null) {
+                                redirectPath = servletContextPath + redirectPath;
+                            }
+                            // 重定向
+                            response.sendRedirect(redirectPath);
+                            return;
+                        }
                         // 页面请求 forward
                         // request -> RequestDispatcher forward
                         // RequestDispatcher requestDispatcher = request.getRequestDispatcher(viewPath);
@@ -144,9 +199,14 @@ public class FrontControllerServlet extends HttpServlet {
                         requestDispatcher.forward(request, response);
                         return;
                     } else if (controller instanceof RestController) {
-                        // TODO
+                        response.setCharacterEncoding("UTF-8");
+                        response.setContentType("application/json");
+                        try (PrintWriter writer = response.getWriter()) {
+                            String result = JSON.toJSONString(handlerMethodInfo.getHandlerMethod().invoke(controller, request, response));
+                            writer.write(result);
+                            writer.flush();
+                        }
                     }
-
                 }
             } catch (Throwable throwable) {
                 if (throwable.getCause() instanceof IOException) {
@@ -158,15 +218,4 @@ public class FrontControllerServlet extends HttpServlet {
         }
     }
 
-//    private void beforeInvoke(Method handleMethod, HttpServletRequest request, HttpServletResponse response) {
-//
-//        CacheControl cacheControl = handleMethod.getAnnotation(CacheControl.class);
-//
-//        Map<String, List<String>> headers = new LinkedHashMap<>();
-//
-//        if (cacheControl != null) {
-//            CacheControlHeaderWriter writer = new CacheControlHeaderWriter();
-//            writer.write(headers, cacheControl.value());
-//        }
-//    }
 }

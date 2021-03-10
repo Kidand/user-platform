@@ -1,5 +1,6 @@
 package cn.kidand.projects.user.repository;
 
+
 import cn.kidand.projects.user.domain.User;
 
 import java.util.Collection;
@@ -19,7 +20,10 @@ public interface UserRepository {
 
     User getById(Long userId);
 
-    User getByNameAndPassword(String userName, String password);
+    User getByNameAndPassword(String name, String password);
+
+    User getByName(String name);
 
     Collection<User> getAll();
+
 }

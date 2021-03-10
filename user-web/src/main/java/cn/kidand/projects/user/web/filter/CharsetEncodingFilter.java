@@ -1,6 +1,12 @@
 package cn.kidand.projects.user.web.filter;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -29,12 +35,12 @@ public class CharsetEncodingFilter implements Filter {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpRequest.setCharacterEncoding(encoding);
             httpResponse.setCharacterEncoding(encoding);
-            servletContext.log("当前编码已设置为：" + encoding);
+            servletContext.log(String.format("当前编码已设置为[%s] path[%s]", encoding, ((HttpServletRequest) request).getRequestURI()));
             // CharsetEncodingFilter -> FrontControllerServlet -> forward -> index.jsp
         }
 
         // 执行过滤链
-        chain.doFilter(request,response);
+        chain.doFilter(request, response);
     }
 
     @Override

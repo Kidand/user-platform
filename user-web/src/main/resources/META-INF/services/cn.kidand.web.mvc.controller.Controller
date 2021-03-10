@@ -1,1 +1,4 @@
 cn.kidand.projects.user.web.controller.HelloWorldController
+cn.kidand.projects.user.web.controller.UserController
+cn.kidand.projects.user.web.controller.UserRestController
+cn.kidand.projects.user.web.controller.JndiController

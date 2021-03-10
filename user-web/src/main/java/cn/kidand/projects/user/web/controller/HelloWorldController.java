@@ -1,7 +1,6 @@
 package cn.kidand.projects.user.web.controller;
 
-import cn.kidand.projects.user.domain.User;
-import cn.kidand.projects.user.service.UserService;
+
 import cn.kidand.web.mvc.controller.PageController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,31 +12,18 @@ import javax.ws.rs.Path;
 /**
  * 输出 “Hello,World” Controller
  */
-@Path("/user")
+@Path("/hello")
 public class HelloWorldController implements PageController {
-    private UserService userService;
 
     @GET
     @POST
-    @Path("/register") // /hello/world -> HelloWorldController
+    @Path("/world") // /hello/world -> HelloWorldController
     public String execute(HttpServletRequest request, HttpServletResponse response) throws Throwable {
         return "index.jsp";
     }
 
-
-
-    @POST
-    @Path("/register/user")
-    public String register(User user , HttpServletRequest request){
-        boolean register = userService.register(user);
-        String view;
-        if (register){
-            //获取所以用户
-            request.setAttribute("users" , userService.queryAll());
-            view = "user/system.jsp";
-        }else {
-            view = "user/error.jsp";
-        }
-        return view;
+    @Path("/world2")
+    public String world2(HttpServletRequest request, HttpServletResponse response) throws Throwable {
+        return "index.jsp";
     }
 }

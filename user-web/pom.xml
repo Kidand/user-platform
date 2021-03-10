@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>cn.kidand.projects</groupId>
+        <groupId>cn.kidand</groupId>
         <artifactId>user-platform</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -11,13 +11,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>user-web</artifactId>
-    <name>User Web Application ${revision}</name>
+    <name>user-web ${revision}</name>
+    <description>User Web Application ${revision}</description>
     <packaging>war</packaging>
-
 
     <dependencies>
         <dependency>
-            <groupId>cn.kidand.projects</groupId>
+            <groupId>cn.kidand</groupId>
             <artifactId>my-web-mvc</artifactId>
             <version>${revision}</version>
         </dependency>
@@ -47,6 +47,18 @@
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
                 <version>2.1</version>
+                <configuration>
+                    <charset>UTF-8</charset>
+                    <!-- 开启JNDI -->
+                    <enableNaming>true</enableNaming>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derby</artifactId>
+                        <version>${derby.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>tomcat-run</id>
