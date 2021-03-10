@@ -14,19 +14,18 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
-*
-*  ██╗  ██╗██╗██████╗  █████╗ ███╗   ██╗██████╗
-*  ██║ ██╔╝██║██╔══██╗██╔══██╗████╗  ██║██╔══██╗
-*  █████╔╝ ██║██║  ██║███████║██╔██╗ ██║██║  ██║
-*  ██╔═██╗ ██║██║  ██║██╔══██║██║╚██╗██║██║  ██║
-*  ██║  ██╗██║██████╔╝██║  ██║██║ ╚████║██████╔╝
-*  ╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
-*
-* @description:UserController
-* @author: Kidand
-* @date: 2021/3/9 6:48 下午
-* Copyright © 2019-Kidand. 
-*/
+ * ██╗  ██╗██╗██████╗  █████╗ ███╗   ██╗██████╗
+ * ██║ ██╔╝██║██╔══██╗██╔══██╗████╗  ██║██╔══██╗
+ * █████╔╝ ██║██║  ██║███████║██╔██╗ ██║██║  ██║
+ * ██╔═██╗ ██║██║  ██║██╔══██║██║╚██╗██║██║  ██║
+ * ██║  ██╗██║██████╔╝██║  ██║██║ ╚████║██████╔╝
+ * ╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝
+ *
+ * @description:UserController
+ * @author: Kidand
+ * @date: 2021/3/9 6:48 下午
+ * Copyright © 2019-Kidand.
+ */
 @Path("/user")
 public class UserController implements PageController {
 
@@ -43,7 +42,14 @@ public class UserController implements PageController {
     public String register(HttpServletRequest request, HttpServletResponse response) {
         User user = new User();
         stringCharsetConvert(request.getParameter("name")).ifPresent(user::setName);
-        stringCharsetConvert(request.getParameter("password")).ifPresent(user::setPassword);
+
+        String password = request.getParameter("password");
+        if (password.length() >= 6 && password.length() <= 32) {
+            stringCharsetConvert(request.getParameter("password")).ifPresent(user::setPassword);
+        } else {
+            return "redirect:passwordsize/fail";
+        }
+
         if (request.getParameter("email").contains("@")) {
             stringCharsetConvert(request.getParameter("email")).ifPresent(user::setEmail);
         } else {
@@ -52,7 +58,7 @@ public class UserController implements PageController {
 
         String phoneNumber = request.getParameter("phoneNumber");
 
-        if (isNumeric(phoneNumber) && phoneNumber.length() > 6 && phoneNumber.length() < 32) {
+        if (isNumeric(phoneNumber) && phoneNumber.length() == 11) {
             stringCharsetConvert(request.getParameter("phoneNumber")).ifPresent(user::setPhoneNumber);
         } else {
             return "redirect:telsize/fail";
@@ -79,6 +85,11 @@ public class UserController implements PageController {
     @Path("/register/fail")
     public String registerFail(HttpServletRequest request, HttpServletResponse response) {
         return "register-fail.jsp";
+    }
+
+    @Path("/passwordsize/fail")
+    public String passwordSizeFail(HttpServletRequest request, HttpServletResponse response) {
+        return "passwordsize-fail.jsp";
     }
 
     @Path("/telsize/fail")

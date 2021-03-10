@@ -5,7 +5,7 @@
 </head>
 <body>
 <div>
-    电话号码应该是大于6且小于32的数字，请返回重试
+    电话号码应为11位的数字的数字，请返回重试
 </div>
 <div>
     <a href="${contextPath}/user/register/page">返回注册</a>
